@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="El Perdonómetro: tu frasco kawaii para ahorrar lucas." />
+  <meta name="theme-color" content="#a8e4ff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Perdonómetro" />
+  <title>El Perdonómetro</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Fondo kawaii: nubes y destellos -->
+  <div class="fondo" aria-hidden="true">
+    <span class="nube nube-1"></span>
+    <span class="nube nube-2"></span>
+    <span class="nube nube-3"></span>
+    <span class="destello d-1">✦</span>
+    <span class="destello d-2">✧</span>
+    <span class="destello d-3">✦</span>
+    <span class="destello d-4">✧</span>
+  </div>
+
+  <!-- ==================== PANTALLA DE INICIO DE SESIÓN ==================== -->
+  <main id="vista-login" class="vista">
+    <section class="tarjeta tarjeta-login">
+      <div class="mascota" aria-hidden="true">
+        <!-- Frasco mascota -->
+        <svg viewBox="0 0 120 140" width="96" height="112">
+          <rect x="30" y="8" width="60" height="20" rx="9" fill="#ffd6e8" stroke="#ff9ec4" stroke-width="4" />
+          <rect x="36" y="26" width="48" height="14" rx="6" fill="#ffe7f1" stroke="#ff9ec4" stroke-width="3" />
+          <rect x="22" y="38" width="76" height="92" rx="26" fill="#ffffff" stroke="#7fd4f5" stroke-width="5" />
+          <path d="M26 92 h68 v12 a22 22 0 0 1 -22 22 h-24 a22 22 0 0 1 -22 -22 z" fill="#a8e4ff" />
+          <circle cx="47" cy="76" r="6" fill="#3f5d75" />
+          <circle cx="73" cy="76" r="6" fill="#3f5d75" />
+          <circle cx="49" cy="74" r="2" fill="#fff" />
+          <circle cx="75" cy="74" r="2" fill="#fff" />
+          <ellipse cx="36" cy="88" rx="8" ry="5" fill="#ffb6d1" opacity=".9" />
+          <ellipse cx="84" cy="88" rx="8" ry="5" fill="#ffb6d1" opacity=".9" />
+          <path d="M52 88 q8 9 16 0" fill="none" stroke="#3f5d75" stroke-width="4" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <h1 class="titulo">El Perdonómetro</h1>
+      <p class="subtitulo">Tu frasquito kawaii de lucas ✨</p>
+
+      <form id="form-login" novalidate>
+        <label class="campo">
+          <span>Usuario</span>
+          <input id="usuario" name="usuario" type="text" autocomplete="username"
+                 autocapitalize="none" spellcheck="false" placeholder="ej: anyi" required />
+        </label>
+
+        <label class="campo">
+          <span>Contraseña</span>
+          <input id="clave" name="clave" type="password" autocomplete="current-password"
+                 placeholder="••••••••" required />
+        </label>
+
+        <p id="error-login" class="error" role="alert" hidden></p>
+
+        <button class="boton primario ancho" type="submit">Entrar ✨</button>
+      </form>
+
+      <p class="pie">Hecho con cariño 💙</p>
+    </section>
+  </main>
+
+  <!-- ==================== PANTALLA PRINCIPAL ==================== -->
+  <main id="vista-app" class="vista" hidden>
+    <header class="cabecera">
+      <div class="marca">
+        <svg class="marca-icono" viewBox="0 0 120 140" aria-hidden="true">
+          <rect x="30" y="8" width="60" height="20" rx="9" fill="#ffd6e8" stroke="#ff9ec4" stroke-width="5" />
+          <rect x="22" y="38" width="76" height="92" rx="26" fill="#ffffff" stroke="#7fd4f5" stroke-width="6" />
+          <path d="M26 96 h68 v8 a22 22 0 0 1 -22 22 h-24 a22 22 0 0 1 -22 -22 z" fill="#a8e4ff" />
+          <circle cx="47" cy="76" r="7" fill="#3f5d75" />
+          <circle cx="73" cy="76" r="7" fill="#3f5d75" />
+          <path d="M53 92 q7 8 14 0" fill="none" stroke="#3f5d75" stroke-width="5" stroke-linecap="round" />
+        </svg>
+        Perdonómetro
+      </div>
+      <div class="sesion">
+        <span id="nombre-usuario" class="chip-usuario"></span>
+        <button id="btn-salir" class="boton-icono" type="button" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"
+                  fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Contador total + deudas de cada quien -->
+    <section class="tarjeta resumen" aria-live="polite">
+      <p class="etiqueta">Total en el frasco</p>
+      <p class="contador"><span id="total">$0</span></p>
+
+      <!-- Cuánto le debe cada uno -->
+      <div id="marcador" class="marcador"></div>
+    </section>
+
+    <!-- Frasco -->
+    <section class="zona-frasco">
+      <div id="frasco" class="frasco">
+        <div class="tapa"><span class="tapa-linea"></span></div>
+
+        <div class="cuerpo">
+          <div id="liquido" class="liquido" style="height:0%">
+            <div class="pila" aria-hidden="true"></div>
+            <div class="billetes-adentro" aria-hidden="true">
+              <span class="billete flotar f-1"></span>
+              <span class="billete flotar f-2"></span>
+              <span class="billete flotar f-3"></span>
+            </div>
+          </div>
+
+          <!-- Cara kawaii sobre el vidrio -->
+          <svg class="cara" viewBox="0 0 200 160" aria-hidden="true">
+            <circle cx="66" cy="60" r="12" fill="#3f5d75" />
+            <circle cx="134" cy="60" r="12" fill="#3f5d75" />
+            <circle cx="70" cy="55" r="4.5" fill="#fff" />
+            <circle cx="138" cy="55" r="4.5" fill="#fff" />
+            <ellipse cx="42" cy="86" rx="16" ry="10" fill="#ffb6d1" opacity=".95" />
+            <ellipse cx="158" cy="86" rx="16" ry="10" fill="#ffb6d1" opacity=".95" />
+            <path d="M86 86 q14 16 28 0" fill="none" stroke="#3f5d75" stroke-width="8" stroke-linecap="round" />
+          </svg>
+
+          <div class="brillo" aria-hidden="true"></div>
+        </div>
+
+        <div id="capa-moneda" class="capa-moneda" aria-hidden="true"></div>
+      </div>
+      <p id="estado-frasco" class="estado-frasco">El frasco está esperando su primera luca</p>
+    </section>
+
+    <!-- Botón grande -->
+    <div class="zona-accion">
+      <button id="btn-cobrar" class="boton cobrar" type="button">
+        <span class="cobrar-texto">Cobrar luca</span>
+        <span class="cobrar-monto" id="cobrar-monto">+ $1.000</span>
+      </button>
+      <p class="pista" id="pista">Cada cobro sube <strong>$1.000</strong> a quien corresponda</p>
+    </div>
+
+    <!-- Movimientos -->
+    <section class="tarjeta movimientos">
+      <h2 class="titulo-seccion">Últimos cobros <span id="cantidad-cobros" class="badge">0</span></h2>
+      <ul id="lista-movimientos" class="lista"></ul>
+      <p id="lista-vacia" class="vacio">Aún no cobras nada… ¡el frasco tiene hambre!</p>
+    </section>
+  </main>
+
+  <!-- ==================== MODAL DE CONFIRMACIÓN ==================== -->
+  <div id="modal" class="modal-fondo" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" aria-describedby="modal-texto">
+      <div class="modal-cara" aria-hidden="true">
+        <svg viewBox="0 0 120 120" width="76" height="76">
+          <circle cx="60" cy="60" r="52" fill="#eaf8ff" stroke="#a8e4ff" stroke-width="6" />
+          <circle cx="43" cy="55" r="7" fill="#3f5d75" />
+          <circle cx="77" cy="55" r="7" fill="#3f5d75" />
+          <circle cx="45.5" cy="52" r="2.5" fill="#fff" />
+          <circle cx="79.5" cy="52" r="2.5" fill="#fff" />
+          <ellipse cx="28" cy="70" rx="10" ry="6" fill="#ffb6d1" />
+          <ellipse cx="92" cy="70" rx="10" ry="6" fill="#ffb6d1" />
+          <path d="M48 74 q12 14 24 0" fill="none" stroke="#3f5d75" stroke-width="6" stroke-linecap="round" />
+        </svg>
+      </div>
+      <h2 id="modal-titulo">¿Estás seguro?</h2>
+      <p id="modal-texto">Vas a meter <strong>$1.000</strong> al frasco. ¿Lo hacemos? ✨</p>
+      <div class="modal-botones">
+        <button id="btn-no" class="boton suave" type="button">No, aún no</button>
+        <button id="btn-si" class="boton primario" type="button">¡Sí, cobrar!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aviso flotante -->
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
