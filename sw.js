@@ -7,7 +7,7 @@
      (sirve de caché al tiro y actualiza en segundo plano).
    ============================================================ */
 
-const CACHE = "perdonometro-v5";
+const CACHE = "perdonometro-v6";
 
 const RECURSOS = [
   "./",

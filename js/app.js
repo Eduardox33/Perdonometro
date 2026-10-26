@@ -370,4 +370,27 @@
   }
 
   iniciar();
+
+  /* ---------- preview visual (solo consola, no toca la DB) ---------- */
+  /**
+   * Desde la consola del navegador (F12):
+   *   nivel(0)    → frasco vacío
+   *   nivel(25)   → 25 %
+   *   nivel(50)   → 50 %
+   *   nivel(75)   → 75 %
+   *   nivel(100)  → lleno
+   *   nivel()     → vuelve al valor real
+   */
+  window.nivel = function (pct) {
+    if (pct === undefined) {
+      // restaurar al valor real
+      if (datos) pintar(false);
+      console.log("🫙 Frasco restaurado al valor real.");
+      return;
+    }
+    pct = Math.max(0, Math.min(100, Number(pct) || 0));
+    ui.liquido.style.height = pct + "%";
+    ui.liquido.classList.toggle("sin-dinero", pct <= 0);
+    console.log(`🫙 Frasco al ${pct}% (solo visual, no afecta datos).`);
+  };
 })();
