@@ -48,7 +48,11 @@ La sesión queda en `localStorage` → no vuelve a pedirla hasta que cierres ses
    se sigue reproduciendo** con cada cobro. No hay barra de progreso ni texto de meta:
    el frasco vacío queda completamente limpio.
 6. Historial con los últimos cobros (quién cobró a quién, fecha y hora).
-7. **Tiempo real**: si abres la app en dos pestañas, un cobro se refleja en las dos.
+7. **"Chat" 💬**: un chat compacto (entre el botón de cobrar y los últimos
+   cobros) para escribirse mensajitos el uno al otro. Muestra los últimos 30 y
+   scrolleando hacia arriba trae el resto; lo nuevo llega solo (misma petición
+   del sondeo, lectura incremental para no gastar reads de Turso).
+8. **Tiempo real**: si abres la app en dos pestañas, un cobro se refleja en las dos.
 
 ---
 
@@ -104,12 +108,35 @@ El esquema completo (por si quieres recrearla o verlo) está en **`db/schema.sql
 turso db shell perdonometro < db\schema.sql
 ```
 
+> Si tu base ya era solo la de 4 tablas y quieres agregar el chat a mano, este es
+> el query (también está en `schema.sql` y lo dejamos como `tools/migrar_chat_turso.py`):
+>
+> ```sql
+> CREATE TABLE IF NOT EXISTS mensajes (
+>   id    INTEGER PRIMARY KEY AUTOINCREMENT,
+>   autor TEXT NOT NULL,
+>   texto TEXT NOT NULL,
+>   ts    INTEGER NOT NULL
+> );
+> ```
+
 ### Reiniciar los contadores
 
 ```sql
 UPDATE deudas SET debe = 0, actualizado = 0;
 DELETE FROM movimientos;
+DELETE FROM mensajes; -- borra también todo el chat
 ```
+
+**Ojo:** al tocar la base a mano (o desde `turso db shell`), no olvides subir la
+revisión para que las apps abiertas la detecten al tiro:
+
+```sql
+UPDATE estado SET revision = (unixepoch('now') + 1) * 1000 WHERE id = 1;
+```
+
+(Si no, no pasa nada grave: las apps re-leen todo cada 15 sondeos como red de
+seguridad, máximo ~30 s de tardanza.)
 
 ### Rotar el token
 

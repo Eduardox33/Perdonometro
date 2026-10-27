@@ -686,6 +686,237 @@ input:focus-visible {
   margin: 0;
 }
 
+/* ---------- Charla: chat compacto ---------- */
+.chat { padding: 16px 16px 14px; margin-bottom: 26px; }
+.badge-chat { background: var(--celeste-100); color: var(--celeste-600); }
+
+.chat-scroll {
+  position: relative;
+  height: 208px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--celeste-50);
+  border: 2px solid var(--celeste-100);
+  border-radius: 18px;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--celeste-300) transparent;
+}
+.chat-scroll::-webkit-scrollbar { width: 7px; }
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: var(--celeste-200);
+  border-radius: 999px;
+}
+
+.chat-mas {
+  display: block;
+  margin: 0 auto 10px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--texto-suave);
+  background: var(--blanco);
+  border: 1.5px dashed var(--celeste-300);
+  border-radius: 999px;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.chat-mas:hover { background: var(--celeste-100); }
+
+.chat-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.mensaje {
+  display: flex;
+  flex-direction: column;
+  max-width: 82%;
+  animation: chispa-chat .28s ease both;
+}
+@keyframes chispa-chat {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.mensaje .quien {
+  margin: 0 3px 2px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--texto-suave);
+  letter-spacing: .2px;
+}
+.mensaje .globo {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: var(--texto);
+  background: color-mix(in srgb, var(--tinte, var(--celeste-300)) 30%, #ffffff);
+  border: 1.5px solid color-mix(in srgb, var(--tinte, var(--celeste-300)) 55%, #ffffff);
+  border-radius: 16px 16px 16px 5px;
+  box-shadow: var(--sombra-suave);
+}
+.mensaje.mias {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.mensaje.mias .globo {
+  background: color-mix(in srgb, var(--tinte, var(--rosa-300)) 48%, #ffffff);
+  border-radius: 16px 16px 5px 16px;
+}
+.mensaje.pendiente { opacity: .55; }
+.mensaje.pendiente .globo::after {
+  content: " ⌛";
+  font-size: 11px;
+}
+.mensaje.fallo .globo {
+  border-color: var(--rosa-400);
+  background: var(--rosa-100);
+  color: #e2608f;
+}
+.mensaje.fallo .globo::after {
+  content: " (no se pudo enviar, toca reintentar)";
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chat-vacio {
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 13px;
+  border: 2px dashed var(--rosa-200);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 4px 0;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--texto);
+  background: var(--blanco);
+  border: 2px solid var(--celeste-200);
+  border-radius: 999px;
+  padding: 10px 16px;
+  transition: border-color .2s ease, background .2s ease;
+}
+.chat-input::placeholder { color: #a9c6d9; }
+.chat-input:focus { background: var(--celeste-50); border-color: var(--celeste-400); }
+.chat-enviar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--blanco);
+  background: linear-gradient(135deg, var(--rosa-300), var(--rosa-400));
+  box-shadow: 0 4px 0 rgba(255, 126, 176, .55);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.chat-enviar:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(255, 126, 176, .55);
+}
+
+/* ---------- Estadíticas ---------- */
+.estadisticas { padding: 18px 20px; margin-top: 26px; }
+.badge-stats { background: var(--rosa-100); color: #e2608f; }
+.uniform {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat-caja {
+  background: var(--celeste-50);
+  border: 2px solid var(--celeste-100);
+  border-radius: 18px;
+  padding: 13px 10px 11px;
+  text-align: center;
+}
+.stat-numero {
+  display: block;
+  font-size: clamp(22px, 7vw, 27px);
+  font-weight: 900;
+  color: var(--celeste-600);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stat-caja .stat-pie {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--texto-suave);
+}
+.stat-barras {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.stat-fila {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+.stat-quien {
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stat-track {
+  height: 18px;
+  overflow: hidden;
+  background: var(--celeste-100);
+  border: 2px solid var(--celeste-200);
+  border-radius: 999px;
+}
+.stat-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--tinte, var(--celeste-300)) 55%, #ffffff),
+    var(--tinte, var(--celeste-300)));
+  border-radius: 999px;
+  transition: width .7s cubic-bezier(.22, 1, .36, 1);
+}
+.stat-monto {
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--celeste-600);
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+  text-align: right;
+}
+.stat-nota {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
 /* ================= MODAL ================= */
 .modal-fondo {
   position: fixed;

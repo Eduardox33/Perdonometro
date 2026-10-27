@@ -31,12 +31,38 @@
   <main id="vista-login" class="vista">
     <section class="tarjeta tarjeta-login">
       <div class="mascota" aria-hidden="true">
-        <!-- Frasco mascota -->
+        <!-- Frasco mascota (lleno de billetes, como el icono de la app) -->
         <svg viewBox="0 0 120 140" width="96" height="112">
+          <defs>
+            <linearGradient id="frasco-verde-login" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#a3e8c4"/>
+              <stop offset="1" stop-color="#55c488"/>
+            </linearGradient>
+            <clipPath id="frasco-int-login">
+              <rect x="25" y="41" width="70" height="88" rx="23"/>
+            </clipPath>
+          </defs>
           <rect x="30" y="8" width="60" height="20" rx="9" fill="#ffd6e8" stroke="#ff9ec4" stroke-width="4" />
           <rect x="36" y="26" width="48" height="14" rx="6" fill="#ffe7f1" stroke="#ff9ec4" stroke-width="3" />
           <rect x="22" y="38" width="76" height="92" rx="26" fill="#ffffff" stroke="#7fd4f5" stroke-width="5" />
-          <path d="M26 92 h68 v12 a22 22 0 0 1 -22 22 h-24 a22 22 0 0 1 -22 -22 z" fill="#a8e4ff" />
+
+          <!-- contenido: billetes en vez de agua -->
+          <g clip-path="url(#frasco-int-login)">
+            <path d="M26 92 h68 v12 a22 22 0 0 1 -22 22 h-24 a22 22 0 0 1 -22 -22 z" fill="url(#frasco-verde-login)"/>
+            <g transform="rotate(-10 53 90)">
+              <rect x="36" y="84" width="34" height="13" rx="3" fill="#8ce0b4" stroke="#45b17e" stroke-width="2.5"/>
+              <text x="53" y="93.5" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="900" fill="#2f8f6e">$</text>
+            </g>
+            <g transform="rotate(7 76 91)">
+              <rect x="59" y="85" width="34" height="13" rx="3" fill="#75d6a5" stroke="#45b17e" stroke-width="2.5"/>
+              <text x="76" y="94.5" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="900" fill="#2f8f6e">$</text>
+            </g>
+            <g transform="rotate(4 52 111)">
+              <rect x="32" y="104" width="40" height="15" rx="3" fill="#8ce0b4" stroke="#45b17e" stroke-width="2.5"/>
+              <text x="52" y="115" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="900" fill="#2f8f6e">$</text>
+            </g>
+          </g>
+
           <circle cx="47" cy="76" r="6" fill="#3f5d75" />
           <circle cx="73" cy="76" r="6" fill="#3f5d75" />
           <circle cx="49" cy="74" r="2" fill="#fff" />
@@ -77,9 +103,35 @@
     <header class="cabecera">
       <div class="marca">
         <svg class="marca-icono" viewBox="0 0 120 140" aria-hidden="true">
+          <defs>
+            <linearGradient id="frasco-verde-marca" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#a3e8c4"/>
+              <stop offset="1" stop-color="#55c488"/>
+            </linearGradient>
+            <clipPath id="frasco-int-marca">
+              <rect x="27" y="41" width="66" height="88" rx="21"/>
+            </clipPath>
+          </defs>
           <rect x="30" y="8" width="60" height="20" rx="9" fill="#ffd6e8" stroke="#ff9ec4" stroke-width="5" />
           <rect x="22" y="38" width="76" height="92" rx="26" fill="#ffffff" stroke="#7fd4f5" stroke-width="6" />
-          <path d="M26 96 h68 v8 a22 22 0 0 1 -22 22 h-24 a22 22 0 0 1 -22 -22 z" fill="#a8e4ff" />
+
+          <!-- contenido: billetes en vez de agua -->
+          <g clip-path="url(#frasco-int-marca)">
+            <path d="M26 96 h68 v8 a22 22 0 0 1 -22 22 h-24 a22 22 0 0 1 -22 -22 z" fill="url(#frasco-verde-marca)"/>
+            <g transform="rotate(-8 55 100)">
+              <rect x="40" y="94" width="30" height="11" rx="2.5" fill="#8ce0b4" stroke="#45b17e" stroke-width="2" />
+              <text x="55" y="102.5" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="900" fill="#2f8f6e">$</text>
+            </g>
+            <g transform="rotate(6 72 99)">
+              <rect x="57" y="93.5" width="30" height="11" rx="2.5" fill="#75d6a5" stroke="#45b17e" stroke-width="2" />
+              <text x="72" y="102" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="900" fill="#2f8f6e">$</text>
+            </g>
+            <g transform="rotate(3 51 116)">
+              <rect x="31" y="108" width="40" height="16" rx="3" fill="#8ce0b4" stroke="#45b17e" stroke-width="2" />
+              <text x="51" y="119.5" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="900" fill="#2f8f6e">$</text>
+            </g>
+          </g>
+
           <circle cx="47" cy="76" r="7" fill="#3f5d75" />
           <circle cx="73" cy="76" r="7" fill="#3f5d75" />
           <path d="M53 92 q7 8 14 0" fill="none" stroke="#3f5d75" stroke-width="5" stroke-linecap="round" />
@@ -153,11 +205,48 @@
       <p class="pista" id="pista">Cada cobro sube <strong>$1.000</strong> a quien corresponda</p>
     </div>
 
+    <!-- Chat: mensajes de la pareja -->
+    <section class="tarjeta chat" aria-label="Chat">
+      <h2 class="titulo-seccion">Chat <span class="badge badge-chat">💬</span></h2>
+      <div id="chat-scroll" class="chat-scroll" tabindex="0">
+        <button id="chat-mas" class="chat-mas" type="button" hidden>cargar anteriores ↓</button>
+        <ul id="chat-lista" class="chat-lista"></ul>
+        <p id="chat-vacio" class="chat-vacio">Todavía no se escriben mensajitos… ¿algo lindo? ✨</p>
+      </div>
+      <form id="chat-form" class="chat-form" autocomplete="off">
+        <input id="chat-input" class="chat-input" type="text" maxlength="300"
+               placeholder="Escribe algo…" enterkeyhint="send" />
+        <button id="chat-enviar" class="chat-enviar" type="submit"
+                title="Enviar" aria-label="Enviar mensaje">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M3.4 20.4 21 12 3.4 3.6l.2 6.5L14 12 3.6 13.9z" fill="currentColor"/>
+          </svg>
+        </button>
+      </form>
+    </section>
+
     <!-- Movimientos -->
     <section class="tarjeta movimientos">
       <h2 class="titulo-seccion">Últimos cobros <span id="cantidad-cobros" class="badge">0</span></h2>
       <ul id="lista-movimientos" class="lista"></ul>
       <p id="lista-vacia" class="vacio">Aún no cobras nada… ¡el frasco tiene hambre!</p>
+    </section>
+
+    <!-- Estadíticas -->
+    <section class="tarjeta estadisticas" aria-label="Estadísticas">
+      <h2 class="titulo-seccion">Estadíticas <span class="badge badge-stats">📊</span></h2>
+      <div class="uniform">
+        <div class="stat-caja">
+          <strong class="stat-numero" id="stat-mes">$0</strong>
+          <span class="stat-pie">cobrado este mes</span>
+        </div>
+        <div class="stat-caja">
+          <strong class="stat-numero" id="stat-racha">0</strong>
+          <span class="stat-pie" id="stat-racha-texto">sin racha todavía</span>
+        </div>
+      </div>
+      <div id="stat-barras" class="stat-barras"></div>
+      <p id="stat-nota" class="stat-nota"></p>
     </section>
   </main>
 

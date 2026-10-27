@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS estado (
   id          INTEGER PRIMARY KEY CHECK (id = 1),
   meta        INTEGER NOT NULL DEFAULT 300000,  -- a qué monto se ve lleno el frasco
-  actualizado INTEGER NOT NULL DEFAULT 0
+  actualizado INTEGER NOT NULL DEFAULT 0,
+  revision    INTEGER NOT NULL DEFAULT 0        -- "huella" para el sondeo barato:
+                     -- sube en cada escritura; el sondeo lee solo esta fila
 );
 
 CREATE TABLE IF NOT EXISTS deudas (
@@ -42,6 +44,14 @@ CREATE TABLE IF NOT EXISTS movimientos (
 );
 
 CREATE INDEX IF NOT EXISTS idx_movimientos_ts ON movimientos (ts DESC);
+
+-- Chat de la pareja (mensajes compactos, sin límite de historial)
+CREATE TABLE IF NOT EXISTS mensajes (
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,  -- creciente → paginar con WHERE id > ?
+  autor TEXT NOT NULL,                      -- 'anyi' | 'edu'
+  texto TEXT NOT NULL,
+  ts    INTEGER NOT NULL
+);
 
 -- --------------------- datos iniciales ---------------------
 INSERT INTO usuarios (usuario, clave, nombre) VALUES

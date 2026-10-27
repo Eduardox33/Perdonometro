@@ -52,14 +52,280 @@
     btnSi: $("btn-si"),
     btnNo: $("btn-no"),
     aviso: $("aviso"),
+    chatScroll: $("chat-scroll"),
+    chatLista: $("chat-lista"),
+    chatVacia: $("chat-vacio"),
+    chatMas: $("chat-mas"),
+    chatForm: $("chat-form"),
+    chatInput: $("chat-input"),
+    chatEnviar: $("chat-enviar"),
+    statsMes: $("stat-mes"),
+    statsRacha: $("stat-racha"),
+    statsRachaTexto: $("stat-racha-texto"),
+    statsBarras: $("stat-barras"),
+    statsNota: $("stat-nota"),
   };
 
   let sesion = null;
   let datos = null;
   let desuscribir = null;
+  let desuscribirChat = null;
   let totalMostrado = 0;        // para animar el contador
   let deudasPrevias = {};       // para animar el marcador
   let avisoTimer = null;
+
+  /* ============================================================
+     ESTADÍTIKAS
+     ------------------------------------------------------------
+     Todo se calcula de los movimientos que ya están en memoria
+     (los últimos 50): 0 reads extra para las gráficas.
+     ============================================================ */
+  function calcularStats(movs) {
+    const ahora = new Date();
+    const delMes = movs.filter((m) => {
+      const f = new Date(m.ts);
+      return f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
+    });
+
+    const porPersona = {};
+    Store.usuarios().forEach((u) => (porPersona[u.usuario] = 0));
+    delMes.forEach((m) => (porPersona[m.autor] = (porPersona[m.autor] || 0) + m.monto));
+    const totalMes = delMes.reduce((suma, m) => suma + m.monto, 0);
+
+    // racha: días seguidos (hacia atrás desde hoy) con al menos 1 cobro
+    const dias = new Set(movs.map((m) => new Date(m.ts).toDateString()));
+    let racha = 0;
+    const d = new Date();
+    while (racha < 60 && dias.has(d.toDateString())) {
+      racha += 1;
+      d.setDate(d.getDate() - 1);
+    }
+
+    return { totalMes, cantidadMes: delMes.length, porPersona, total: movs.length, racha };
+  }
+
+  function pintarStats() {
+    const s = calcularStats(datos.movimientos || []);
+
+    ui.statsMes.textContent = dinero(s.totalMes);
+    ui.statsRacha.textContent = String(s.racha);
+    ui.statsRachaTexto.textContent =
+      s.racha > 0 ? `${s.racha === 1 ? "día" : "días"} de racha con cobros 🔥` : "empieza tu racha hoy ✨";
+
+    // barras: quién le pagó más al frasco este mes
+    ui.statsBarras.innerHTML = "";
+    Store.usuarios().forEach((u) => {
+      const monto = s.porPersona[u.usuario] || 0;
+      const pct = s.totalMes > 0 ? Math.round((monto / s.totalMes) * 100) : 0;
+
+      const fila = document.createElement("div");
+      fila.className = "stat-fila";
+      fila.style.setProperty("--tinte", u.color || "#a8e4ff");
+      fila.innerHTML = `
+        <span class="stat-quien">${u.nombre}</span>
+        <span class="stat-track"><span class="stat-fill" style="width:0%"></span></span>
+        <strong class="stat-monto">${dinero(monto)}</strong>`;
+      ui.statsBarras.appendChild(fila);
+
+      // animación de la barra al entrar en pantalla
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          fila.querySelector(".stat-fill").style.width = pct + "%";
+        })
+      );
+    });
+
+    ui.statsNota.textContent =
+      s.total === 0 ? "Todavía no hay cobros para calcular ✨" : `Con tus últimos ${s.total} cobros`;
+  }
+
+  /* ============================================================
+     CHAT de la pareja
+     ------------------------------------------------------------
+     · chat.lista      mensajes confirmados (ordenados por id).
+     · chat.hayMas     quedan mensajes anteriores arriba.
+     · chat.pendientes enviados que aún no confirma la base.
+     Llega solo lo nuevo por la suscripción; el historial viejo
+     se pide por lotes solo cuando scrolleas hacia arriba.
+     ============================================================ */
+  const chat = {
+    lista: [],
+    vistos: new Set(),
+    pendientes: [],
+    hayMas: false,
+    cargandoViejos: false,
+    ultimoId: 0,
+  };
+
+  function limpiarChatTexto(texto) {
+    return String(texto || "").replace(/\s+/g, " ").trim().slice(0, CFG.chat.maxTexto);
+  }
+
+  /** burbuja de un mensaje */
+  function nodoMensaje(m) {
+    const mias = sesion && m.autor === sesion.usuario;
+    const li = document.createElement("li");
+    li.className =
+      "mensaje" +
+      (mias ? " mias" : "") +
+      (m.pendiente ? " pendiente" : "") +
+      (m.fallo ? " fallo" : "");
+    li.dataset.clave = m.id;
+    li.style.setProperty("--tinte", Store.info(m.autor).color || "#a8e4ff");
+
+    const quien = document.createElement("span");
+    quien.className = "quien";
+    const hora = new Date(m.ts).toLocaleTimeString(CFG.moneda.locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    quien.textContent = mias ? `tú · ${hora}` : `${Store.info(m.autor).nombre} · ${hora}`;
+
+    const globo = document.createElement("span");
+    globo.className = "globo";
+    globo.textContent = m.texto;
+
+    li.append(quien, globo);
+    return li;
+  }
+
+  /**
+   * pintar el chat.
+   * modo: "abajo" (anclar al fondo), "auto" (solo si ya estabas abajo),
+   *       "mantener" (al prepender historial, no mover el scroll).
+   */
+  function pintarChat(modo = "auto") {
+    const scroll = ui.chatScroll;
+    const cercaAbajo = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 90;
+    const visible = scroll.scrollHeight - scroll.scrollTop; // ancla al prepender
+
+    ui.chatLista.textContent = "";
+    chat.lista.forEach((m) => ui.chatLista.appendChild(nodoMensaje(m)));
+    chat.pendientes.forEach((m) => ui.chatLista.appendChild(nodoMensaje(m)));
+
+    const hay = chat.lista.length + chat.pendientes.length;
+    ui.chatVacia.hidden = hay > 0;
+    ui.chatMas.hidden = !chat.hayMas || chat.cargandoViejos;
+
+    if (modo === "abajo") scroll.scrollTop = scroll.scrollHeight;
+    else if (modo === "mantener") scroll.scrollTop = scroll.scrollHeight - visible;
+    else if (modo === "auto" && cercaAbajo) scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  /** agrega mensajes nuevos (con su dedupe) y avisa si cambió algo */
+  function agregarAlChat(nuevos) {
+    if (!Array.isArray(nuevos)) return false;
+    let cambio = false;
+
+    nuevos.forEach((m) => {
+      if (!m || m.id === undefined) return;
+      if (chat.vistos.has(m.id)) return;
+      // si este mensaje era un pendiente mío, el pendiente ya no sirve
+      const i = chat.pendientes.findIndex(
+        (p) => p.pendiente && p.autor === m.autor &&
+               p.texto === m.texto && Math.abs(m.ts - p.ts) < 5000
+      );
+      if (i >= 0) chat.pendientes.splice(i, 1);
+
+      chat.lista.push(m);
+      chat.vistos.add(m.id);
+      chat.ultimoId = Math.max(chat.ultimoId, m.id);
+      cambio = true;
+    });
+
+    chat.lista.sort((a, b) => a.id - b.id);
+    if (cambio) Store.chatCopiaGuardar(chat.lista, chat.hayMas);
+    return cambio;
+  }
+
+  /** carga inicial: los últimos N, anclar al fondo */
+  async function chatEmpezar() {
+    chat.lista = [];
+    chat.vistos.clear();
+    chat.pendientes = [];
+    chat.hayMas = false;
+    chat.cargandoViejos = false;
+    ui.chatLista.textContent = "";
+    pintarChat("auto");
+
+    // 1) pinta el último lote guardado en caché (al instante, incluso offline)
+    const copia = Store.chatCopiaLocal();
+    if (copia && copia.mensajes.length) {
+      chat.hayMas = !!copia.hayMas;
+      if (agregarAlChat(copia.mensajes)) pintarChat("abajo");
+    }
+
+    // 2) la base confirma en segundo plano y actualiza lo que falte
+    try {
+      const res = await Store.chatCargar();
+      chat.hayMas = !!res.hayMas;
+      agregarAlChat(res.mensajes);
+      pintarChat("abajo"); // siempre muestra lo último
+    } catch (e) {
+      console.warn("Chat: no se pudo cargar el historial", e);
+      // reintenta en un rato para dejar el sondeo "al día"
+      setTimeout(() => { if (sesion) chatEmpezar(); }, 4000);
+    }
+  }
+
+  /** mensajes que llegan en tiempo real (la base trae SOLO lo nuevo) */
+  function chatLlegaron(nuevos) {
+    if (!sesion || !agregarAlChat(nuevos)) return;
+    pintarChat("auto");
+  }
+
+  /** pide un lote anterior (al scrollear o apretar el botón de arriba) */
+  async function cargarMsgsViejos() {
+    if (!chat.hayMas || chat.cargandoViejos || !chat.lista.length) return;
+    chat.cargandoViejos = true;
+    ui.chatMas.textContent = "cargando…";
+    ui.chatMas.hidden = false;
+
+    try {
+      const res = await Store.chatViejos(chat.lista[0].id);
+      const tener = res.mensajes.filter((m) => !chat.vistos.has(m.id));
+      if (tener.length) {
+        chat.lista = tener.concat(chat.lista);
+        tener.forEach((m) => chat.vistos.add(m.id));
+      }
+      chat.hayMas = !!res.hayMas;
+    } catch (e) {
+      console.warn(e);
+      aviso("No se pudieron cargar mensajes anteriores 😿", true);
+    } finally {
+      chat.cargandoViejos = false;
+      ui.chatMas.textContent = "cargar anteriores ↓";
+      pintarChat("mantener"); // conserva el lugar exacto del scroll
+    }
+  }
+
+  async function enviarChat(borrador) {
+    if (!chat.pendientes.includes(borrador)) chat.pendientes.push(borrador);
+    borrador.pendiente = true;
+    borrador.fallo = false;
+    pintarChat("abajo");
+    try {
+      const real = await Store.chatEnviar(borrador.autor, borrador.texto);
+      if (real) {
+        // El INSERT ya confirma el mensaje: lo agrego directo. El sondeo lo
+        // salta (el envío dejó el cursor al día), así que si lo esperara
+        // se quedaría en "pendiente" para siempre.
+        agregarAlChat([real]);
+        pintarChat("abajo");
+      } else {
+        const i = chat.pendientes.indexOf(borrador);
+        if (i >= 0) chat.pendientes.splice(i, 1);
+        pintarChat("auto");
+      }
+    } catch (e) {
+      console.warn(e);
+      borrador.pendiente = false;
+      borrador.fallo = true;
+      pintarChat("auto");
+      aviso("No se pudo enviar el mensaje 😿", true);
+    }
+    ui.chatInput.focus();
+  }
 
   /* ---------- vistas ---------- */
   function mostrarVista(cual) {
@@ -187,6 +453,8 @@
         <span class="monto">+${dinero(m.monto)}</span>`;
       ui.lista.appendChild(li);
     });
+
+    pintarStats();
   }
 
   function pintarMarcador(animar) {
@@ -289,6 +557,8 @@
       datos = await Store.cobrar(sesion.usuario, CFG.moneda.paso);
       pintar(true);
       animarCobro();
+      // vibración sutil de "dinero entrando" (Android; iOS ignora la API)
+      if ("vibrate" in navigator) navigator.vibrate(35);
       aviso(`¡Le cobraste ${dinero(CFG.moneda.paso)} a ${nombre}! 💵`);
     } catch (e) {
       console.error(e);
@@ -314,16 +584,29 @@
       datos = nuevos;
       if (!eraIgual) pintar(true);
     });
+
+    // chat: historial inicial + mensajes nuevos en tiempo real
+    await chatEmpezar();
+    if (desuscribirChat) desuscribirChat();
+    desuscribirChat = Store.suscribirChat(chatLlegaron);
   }
 
   function salir() {
     if (desuscribir) desuscribir();
     desuscribir = null;
+    if (desuscribirChat) desuscribirChat();
+    desuscribirChat = null;
     Store.cerrarSesion();
     sesion = null;
     datos = null;
     totalMostrado = 0;
     deudasPrevias = {};
+    ui.chatLista.textContent = "";
+    chat.lista = [];
+    chat.vistos.clear();
+    chat.pendientes = [];
+    chat.hayMas = false;
+    ui.chatInput.value = "";
     ui.clave.value = "";
     mostrarVista("login");
     aviso("¡Hasta pronto! 👋");
@@ -351,6 +634,38 @@
   ui.btnSi.addEventListener("click", confirmarCobro);
   ui.modal.addEventListener("click", (e) => {
     if (e.target === ui.modal) cerrarModal();
+  });
+
+  /* ---------- eventos del chat ---------- */
+  ui.chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!sesion) return;
+    const texto = limpiarChatTexto(ui.chatInput.value);
+    if (!texto) {
+      ui.chatInput.value = "";
+      return;
+    }
+    ui.chatInput.value = "";
+    enviarChat({
+      id: "p" + Date.now(),          // clave provisional del borrador
+      autor: sesion.usuario,
+      texto,
+      ts: Date.now(),
+    });
+  });
+
+  // scrollear hasta arriba trae el lote anterior de la base
+  ui.chatScroll.addEventListener("scroll", () => {
+    if (ui.chatScroll.scrollTop < 40) cargarMsgsViejos();
+  });
+  ui.chatMas.addEventListener("click", cargarMsgsViejos);
+
+  // reintentar un mensaje que falló, tocando su burbuja
+  ui.chatLista.addEventListener("click", (e) => {
+    const li = e.target.closest(".mensaje.fallo");
+    if (!li) return;
+    const borrador = chat.pendientes.find((p) => p.id === li.dataset.clave);
+    if (borrador) enviarChat(borrador);
   });
 
   // al volver a la pestaña, repinta con los datos más frescos
